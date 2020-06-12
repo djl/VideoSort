@@ -270,7 +270,7 @@ import os
 import traceback
 import re
 import shutil
-import guessit
+from guessit import guessit
 import difflib
 
 # Exit codes used by NZBGet
@@ -378,9 +378,6 @@ class deprecation_support:
         map_entry = next(self.iter)
         return map_entry if len(map_entry) >= 3 else list(map_entry) + [None]
 
-    def next(self):
-        return self.__next__()
-
 
 def guess_dupe_separator(format):
     """ Find out a char most suitable as dupe_separator
@@ -466,7 +463,7 @@ def move_satellites(videofile, dest):
                 subpart = ''
                 # We support GuessIt supported subtitle extensions
                 if fextlo[1:] in ['srt', 'idx', 'sub', 'ssa', 'ass']:
-                    guess = guessit.guessit(filename)
+                    guess = guessit(filename)
                     if guess and 'subtitle_language' in guess:
                         fbase = fbase[:fbase.rfind('.')]
                         # Use alpha2 subtitle language from GuessIt (en, es, de, etc.)
@@ -502,7 +499,7 @@ def deep_scan_nfo(filename, ratio=deep_scan_ratio):
         # Convert file content into iterable words
         for word in ''.join([item for item in nfo.readlines()]).split():
             try:
-                guess = guessit.guessit(word + '.nfo')
+                guess = guessit(word + '.nfo')
                 # Series = TV, Title = Movie
                 if any(item in guess for item in ('title')):
                     # Compare word against NZB name
@@ -649,7 +646,7 @@ def titler(p):
     """ title() replacement
         Python's title() fails with Latin-1, so use Unicode detour.
     """
-    if isinstance(p, unicode):
+    if isinstance(p, str):
         return p.title()
     elif gUTF:
         try:
@@ -848,7 +845,7 @@ def add_series_mapping(guess, mapping):
             episode_num_just = episodes[0].rjust(2, '0') + episode_separator + episodes[-1].rjust(2, '0')
         else:   # if multiple_episodes == 'list':
             for episode_num in episodes:
-                ep_prefix = episode_separator if episode_num_all <> '' else ''
+                ep_prefix = episode_separator if episode_num_all != '' else ''
                 episode_num_all += ep_prefix + episode_num
                 episode_num_just += ep_prefix + episode_num.rjust(2,'0')
 
@@ -1087,7 +1084,7 @@ def guess_info(filename):
     if verbose:
         print('Guessing: %s' % guessfilename)
 
-    guess = guessit.api.guessit(unicode(guessfilename), {'allowed_languages': [], 'allowed_countries': []})
+    guess = guessit(str(guessfilename), {'allowed_languages': [], 'allowed_countries': []})
 
     if verbose:
         print(guess)
@@ -1215,7 +1212,7 @@ def construct_path(filename):
     old_path = ''
     while old_path != path:
         old_path = path
-        for key, name in REPLACE_AFTER.iteritems():
+        for key, name in list(REPLACE_AFTER.items()):
             path = path.replace(key, name)
 
     path = path.replace('%up', '..')
